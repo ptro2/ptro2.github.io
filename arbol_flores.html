@@ -2,9 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light dark">
 <title>Árbol de Flores</title>
 <style>
+  /* Forzar colores propios, ignorar modo oscuro del sistema */
+  :root {
+    color-scheme: only light;
+  }
   /* ============================================
      CONFIGURACIÓN — edita aquí tus mensajes
      ============================================ */
@@ -30,11 +35,12 @@
     --tierra: #3b2206;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
-    background: radial-gradient(ellipse at top, #1a3a08 0%, #0d1f05 60%, #050e02 100%);
+    background: radial-gradient(ellipse at top, #1a3a08 0%, #0d1f05 60%, #050e02 100%) !important;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -43,6 +49,9 @@
     overflow: hidden;
     position: relative;
     cursor: default;
+    /* Evitar selección de texto al tocar rápido */
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* Estrellas de fondo */
@@ -68,8 +77,9 @@
   /* Escena */
   #escena {
     position: relative;
-    width: 500px;
+    width: min(500px, 100vw);
     height: 90vh;
+    height: 90dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -103,13 +113,19 @@
     cursor: pointer;
     z-index: 3;
     filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
-    transition: filter 0.2s;
+    transition: filter 0.2s, transform 0.15s;
+    /* Escalar árbol en pantallas pequeñas */
+    max-width: 100%;
   }
-  #arbol-container:hover {
-    filter: drop-shadow(0 10px 40px rgba(245,197,24,0.3));
+  @media (max-width: 380px) {
+    #arbol-container svg {
+      width: 260px;
+      height: 390px;
+    }
   }
   #arbol-container:active {
-    transform: translateX(-50%) scale(0.98);
+    transform: translateX(-50%) scale(0.97);
+    filter: drop-shadow(0 10px 40px rgba(245,197,24,0.3));
   }
 
   /* Flores que caen */
@@ -185,7 +201,7 @@
   /* Contador */
   #contador {
     position: fixed;
-    top: 20px;
+    top: max(20px, env(safe-area-inset-top));
     right: 20px;
     color: var(--amarillo);
     font-family: 'Playfair Display', serif;
@@ -201,7 +217,7 @@
   /* Hint */
   #hint {
     position: fixed;
-    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     color: rgba(245,197,24,0.6);
@@ -211,11 +227,17 @@
     letter-spacing: 0.08em;
     z-index: 100;
     pointer-events: none;
+    white-space: nowrap;
     animation: fadeHint 4s ease-in-out infinite;
   }
   @keyframes fadeHint {
     0%, 100% { opacity: 0; }
     30%, 70% { opacity: 1; }
+  }
+
+  /* Touch en flores aterrrizadas */
+  .flor-cayendo.aterrizada {
+    touch-action: manipulation;
   }
 
   /* Partículas al aterrizar */
@@ -242,7 +264,7 @@
 <div id="hint">✦ Toca el árbol para que caiga una flor ✦</div>
 
 <div id="escena">
-  <div id="arbol-container" onclick="soltarFlor()">
+  <div id="arbol-container" onclick="soltarFlor()" style="touch-action: manipulation;">
     <svg id="arbol-svg" width="320" height="480" viewBox="0 0 320 480" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Tronco -->
       <path d="M145 470 C140 420 138 380 142 350 C146 320 148 290 150 260 C152 230 154 200 155 170" stroke="#5c3d1e" stroke-width="22" stroke-linecap="round" fill="none"/>
@@ -579,15 +601,17 @@ function soltarFlor() {
   requestAnimationFrame(animar);
 }
 
-// Cerrar globos al hacer click en el fondo
-document.addEventListener('click', (e) => {
+// Cerrar globos al hacer click/touch en el fondo
+function cerrarGloboActivo(e) {
   if (!e.target.closest('.flor-cayendo') && globoActivo) {
     globoActivo.classList.remove('visible');
     const g = globoActivo;
     setTimeout(() => g.remove(), 300);
     globoActivo = null;
   }
-});
+}
+document.addEventListener('click', cerrarGloboActivo);
+document.addEventListener('touchend', cerrarGloboActivo, { passive: true });
 </script>
 </body>
 </html>
