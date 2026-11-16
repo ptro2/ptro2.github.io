@@ -390,6 +390,16 @@ const MENSAJES = [
 let floresCaidas = 0;
 let globoActivo = null;
 
+// Sonido al tocar el árbol (pon tu archivo en la misma carpeta que index.html)
+const sonidoArbol = new Audio('SACHover.wav');
+sonidoArbol.volume = 0.5;
+
+function reproducirSonido(audio) {
+  const s = audio.cloneNode(); // permite que suene aunque toquen muy rápido
+  s.volume = audio.volume;
+  s.play().catch(() => {});
+}
+
 // Registro de posiciones finales de flores aterrizada
 const posicionesOcupadas = [];
 const FLOR_RADIO = 48;
@@ -459,6 +469,7 @@ function soltarFlor() {
   }
 
   floresCaidas++;
+  reproducirSonido(sonidoArbol);   // <-- nueva línea
   actualizarContador();
 
   const mensaje = MENSAJES[(floresCaidas - 1) % MENSAJES.length];
